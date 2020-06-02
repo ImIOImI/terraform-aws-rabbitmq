@@ -54,3 +54,22 @@ variable "instance_volume_iops" {
   default = "0"
 }
 
+variable "vhost" {
+  default = "/"
+}
+
+variable "admin_password" {
+  type = string
+}
+
+variable "rabbit_password" {
+  type = string
+}
+
+variable "rabbit_user" {
+  type = string
+}
+
+variable "secret_cookie" {
+  type = "string"
+}

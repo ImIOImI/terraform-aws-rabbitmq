@@ -51,9 +51,11 @@ data "template_file" "cloud-init" {
     sync_node_count = 3
     asg_name        = local.cluster_name
     region          = data.aws_region.current.name
-    admin_password  = random_string.admin_password.result
-    rabbit_password = random_string.rabbit_password.result
-    secret_cookie   = random_string.secret_cookie.result
+    admin_password  = var.admin_password
+    rabbit_password = var.rabbit_password
+    secret_cookie   = var.secret_cookie
+    rabbit_vhost    = var.vhost
+    rabbit_user     = var.rabbit_user
     message_timeout = 3 * 24 * 60 * 60 * 1000 # 3 days
   }
 }
@@ -109,46 +111,46 @@ resource "aws_security_group" "rabbitmq_elb" {
   }
 }
 
-resource "aws_security_group" "rabbitmq_nodes" {
-  name        = "${local.cluster_name}-nodes"
-  vpc_id      = var.vpc_id
-  description = "Security Group for the rabbitmq nodes"
-
-  ingress {
-    protocol  = -1
-    from_port = 0
-    to_port   = 0
-    self      = true
-  }
-
-  ingress {
-    protocol        = "tcp"
-    from_port       = 5672
-    to_port         = 5672
-    security_groups = [aws_security_group.rabbitmq_elb.id]
-  }
-
-  ingress {
-    protocol        = "tcp"
-    from_port       = 15672
-    to_port         = 15672
-    security_groups = [aws_security_group.rabbitmq_elb.id]
-  }
-
-  egress {
-    protocol  = "-1"
-    from_port = 0
-    to_port   = 0
-
-    cidr_blocks = [
-      "0.0.0.0/0",
-    ]
-  }
-
-  tags = {
-    Name = "rabbitmq ${var.name} nodes"
-  }
-}
+//resource "aws_security_group" "rabbitmq_nodes" {
+//  name        = "${local.cluster_name}-nodes"
+//  vpc_id      = var.vpc_id
+//  description = "Security Group for the rabbitmq nodes"
+//
+//  ingress {
+//    protocol  = -1
+//    from_port = 0
+//    to_port   = 0
+//    self      = true
+//  }
+//
+//  ingress {
+//    protocol        = "tcp"
+//    from_port       = 5672
+//    to_port         = 5672
+//    security_groups = [aws_security_group.rabbitmq_elb.id]
+//  }
+//
+//  ingress {
+//    protocol        = "tcp"
+//    from_port       = 15672
+//    to_port         = 15672
+//    security_groups = [aws_security_group.rabbitmq_elb.id]
+//  }
+//
+//  egress {
+//    protocol  = "-1"
+//    from_port = 0
+//    to_port   = 0
+//
+//    cidr_blocks = [
+//      "0.0.0.0/0",
+//    ]
+//  }
+//
+//  tags = {
+//    Name = "rabbitmq ${var.name} nodes"
+//  }
+//}
 
 resource "aws_launch_configuration" "rabbitmq" {
   name                 = local.cluster_name
