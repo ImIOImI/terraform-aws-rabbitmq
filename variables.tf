@@ -4,6 +4,14 @@ variable "vpc_id" {
 variable "ssh_key_name" {
 }
 
+variable "tags" {
+  description = "Map of tags for the elb and rabbit instances"
+  type = map(any)
+  default = {
+    "RabbitMQ" = true
+  }
+}
+
 variable "name" {
   default = "main"
 }
@@ -54,8 +62,14 @@ variable "instance_volume_iops" {
   default = "0"
 }
 
-variable "vhost" {
-  default = "/"
+variable "vhost_array" {
+  type    = list(string)
+  default = ["/"]
+}
+
+variable "admin_user" {
+  type    = string
+  default = "admin"
 }
 
 variable "admin_password" {
@@ -67,9 +81,14 @@ variable "rabbit_password" {
 }
 
 variable "rabbit_user" {
-  type = string
+  type    = string
+  default = "rabbit"
 }
 
 variable "secret_cookie" {
-  type = "string"
+  type = string
+}
+
+variable "ssl_cert_arn" {
+  type = string
 }

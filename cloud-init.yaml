@@ -37,7 +37,7 @@ write_files:
 
           NEW_HOSTNAMES=()
           for hostname in $HOSTNAMES; do
-            rabbitmqctl join_cluster rabbit@$hostname
+            rabbitmqctl join_cluster ${rabbit_user}@$hostname
             st=$?
             if [ $st -ne 0 ] && [ $st -ne 130 ]; then  # 130 is "already joined"
               NEW_HOSTNAMES+=( $hostname )
@@ -54,13 +54,17 @@ write_files:
   - path: /root/configure.sh
     content: |
         #!/usr/bin/env bash
-        docker exec rabbitmq rabbitmqctl add_user admin ${admin_password}
-        docker exec rabbitmq rabbitmqctl set_user_tags admin administrator
+        docker exec rabbitmq rabbitmqctl add_user ${admin_user} ${admin_password}
+        docker exec rabbitmq rabbitmqctl set_user_tags ${admin_user} administrator
         docker exec rabbitmq rabbitmqctl add_user ${rabbit_user} ${rabbit_password}
-        docker exec rabbitmq rabbitmqctl add_vhost ${rabbit_vhost}
-        docker exec rabbitmq rabbitmqctl set_policy -p ${rabbit_vhost} ha-three "^" '{"ha-mode":"exactly", "ha-params":${sync_node_count}, "ha-sync-mode":"automatic", "message-ttl":${message_timeout}, "expires":${message_timeout}}'
-        docker exec rabbitmq rabbitmqctl set_permissions -p ${rabbit_vhost} admin ".*" ".*" ".*"
-        docker exec rabbitmq rabbitmqctl set_permissions -p ${rabbit_vhost} rabbit ".*" ".*" ".*"
+        docker exec rabbitmq rabbitmqctl set_user_tags ${rabbit_user} user
+        for vhost in ${vhost_string}
+        do
+          docker exec rabbitmq rabbitmqctl add_vhost $vhost
+          docker exec rabbitmq rabbitmqctl set_policy -p $vhost ha-three "^" '{"ha-mode":"exactly", "ha-params":${sync_node_count}, "ha-sync-mode":"automatic", "message-ttl":${message_timeout}, "expires":${message_timeout}}'
+          docker exec rabbitmq rabbitmqctl set_permissions -p $vhost ${admin_user} ".*" ".*" ".*"
+          docker exec rabbitmq rabbitmqctl set_permissions -p $vhost ${rabbit_user} ".*" ".*" ".*"
+        done
         docker exec rabbitmq rabbitmqctl delete_user guest
 
 runcmd:
